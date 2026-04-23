@@ -36,6 +36,7 @@ class AgentRunState:
     status: str = "running"
     stage_history: List[Dict[str, Any]] = field(default_factory=list)
     messages: List[Dict[str, Any]] = field(default_factory=list)
+    model: Optional[str] = None
 
     def record_stage(self, stage: str, status: str, details: Optional[Dict[str, Any]] = None) -> None:
         entry: Dict[str, Any] = {"stage": stage, "status": status}
@@ -50,6 +51,7 @@ class AgentRunState:
         return {
             "prompt": self.prompt,
             "status": self.status,
+            "model": self.model,
             "repair_attempts": self.repair_attempts,
             "pipeline": self.current_pipeline,
             "execution_result": self.execution_result,
@@ -175,6 +177,7 @@ class AgentWorkflowRunner:
             if not isinstance(pipeline, dict):
                 raise ValueError("Planner did not return a pipeline dictionary")
             state.current_pipeline = pipeline
+            state.model = result.get("model")
             state.messages = list(result.get("messages", [])) if isinstance(result, dict) else []
         except Exception as exc:
             state.status = FAILED_PLANNING

@@ -38,17 +38,17 @@ Why it matters:
 
 Tasks:
 
-- [ ] Add a `runs/` output directory ignored by git.
-- [ ] Persist `trace.json` for every agent run.
-- [ ] Include prompt, model, messages, tool calls, tool results, generated pipeline, execution outputs, verifier results, repairs, timestamps, and final status.
-- [ ] Add `quant-agent trace <trace.json>` to summarize a run.
-- [ ] Add `quant-agent replay <trace.json>` to re-run the saved pipeline without asking the LLM again.
+- [x] Add a `runs/` output directory ignored by git.
+- [x] Persist `trace.json` for every agent run.
+- [x] Include prompt, model, messages, tool calls, tool results, generated pipeline, execution outputs, verifier results, repairs, timestamps, and final status.
+- [x] Add `quant-agent trace <trace.json>` to summarize a run.
+- [x] Add `quant-agent replay <trace.json>` to re-run the saved pipeline without asking the LLM again.
 
 Acceptance:
 
-- [ ] Every `plan --execute` or `agent` run produces a trace file.
-- [ ] A trace can be replayed deterministically with fixture data.
-- [ ] Trace files contain no API keys or secrets.
+- [x] Every `plan --execute` or `agent` run produces a trace file.
+- [x] A trace can be replayed deterministically with fixture data.
+- [x] Trace files contain no API keys or secrets.
 
 Demo command target:
 

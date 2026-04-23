@@ -60,7 +60,7 @@ class ReactLoopAgent:
             iteration_limit=self.max_iters,
         )
         transcript = await coordinator.run()
-        return {"pipeline": self.builder.get_pipeline(), "messages": transcript}
+        return {"pipeline": self.builder.get_pipeline(), "messages": transcript, "model": self.model}
 
 
 class _LoopCoordinator:
@@ -188,4 +188,3 @@ class _LoopCoordinator:
 
     def _stop_message(self, reason: str) -> Dict[str, str]:
         return {"role": "system", "content": reason}
-

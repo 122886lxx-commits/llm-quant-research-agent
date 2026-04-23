@@ -63,6 +63,15 @@ Run the full agent workflow with verification and bounded self-repair:
 python -m quant_research_agent agent "Rank AAPL, MSFT, NVDA by 3-day momentum and explain the result" --max-repairs 1
 ```
 
+Every `plan --execute` and `agent` run writes a redacted trace to `runs/<timestamp>/trace.json` and refreshes `runs/latest/trace.json`.
+
+Summarize or replay a saved trace:
+
+```bash
+python -m quant_research_agent trace runs/latest/trace.json
+python -m quant_research_agent replay runs/latest/trace.json
+```
+
 ## Market Data Behavior
 
 - Exchange-prefixed symbols such as `sh.600000` or `sz.000001` are fetched through BaoStock.
@@ -71,9 +80,9 @@ python -m quant_research_agent agent "Rank AAPL, MSFT, NVDA by 3-day momentum an
 ## Architecture
 
 - `quant_research_agent.engine`: YAML parser, dependency scheduler, execution context, registry, runtime nodes
-- `quant_research_agent.agent`: catalog metadata, generic planner tools, handwritten ReAct loop, workflow verifier, repair state machine
+- `quant_research_agent.agent`: catalog metadata, generic planner tools, handwritten ReAct loop, workflow verifier, repair state machine, trace/replay utilities
 - `examples`: executable pipeline specs
-- `tests`: regression tests for runtime execution, reference interpolation, tool validation, and model fallback
+- `tests`: regression tests for runtime execution, reference interpolation, tool validation, model fallback, workflow repair, and trace replay
 
 ## Why This Project Matters
 

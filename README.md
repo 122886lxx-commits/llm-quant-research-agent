@@ -6,6 +6,7 @@ The project demonstrates three ideas:
 
 - a small YAML runtime for step-based research workflows
 - a handwritten ReAct-style planner loop that edits a pipeline with generic tools
+- an outer agent workflow that plans, runs, verifies, and repairs failed pipelines
 - real integrations for market bars and OpenAI-compatible chat-completions APIs
 
 ## Example Workflow
@@ -56,6 +57,12 @@ export RESEARCH_CHAT_MODEL=qwen-plus
 python -m quant_research_agent plan "Use market bars to compute momentum, rank the symbols, and explain the result." --execute
 ```
 
+Run the full agent workflow with verification and bounded self-repair:
+
+```bash
+python -m quant_research_agent agent "Rank AAPL, MSFT, NVDA by 3-day momentum and explain the result" --max-repairs 1
+```
+
 ## Market Data Behavior
 
 - Exchange-prefixed symbols such as `sh.600000` or `sz.000001` are fetched through BaoStock.
@@ -64,7 +71,7 @@ python -m quant_research_agent plan "Use market bars to compute momentum, rank t
 ## Architecture
 
 - `quant_research_agent.engine`: YAML parser, dependency scheduler, execution context, registry, runtime nodes
-- `quant_research_agent.agent`: catalog metadata, generic planner tools, handwritten ReAct loop
+- `quant_research_agent.agent`: catalog metadata, generic planner tools, handwritten ReAct loop, workflow verifier, repair state machine
 - `examples`: executable pipeline specs
 - `tests`: regression tests for runtime execution, reference interpolation, tool validation, and model fallback
 

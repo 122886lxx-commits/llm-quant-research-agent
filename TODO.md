@@ -11,17 +11,17 @@ Why it matters:
 
 Tasks:
 
-- [ ] Add an `AgentRunState` model that tracks prompt, current pipeline, execution result, errors, repair attempts, and final status.
-- [ ] Split current planner behavior into stages: `plan`, `run`, `verify`, `repair`, `finalize`.
-- [ ] Add a verifier that checks pipeline shape, required outputs, non-empty factor scores, and final report quality.
-- [ ] Add a repair loop that feeds verifier/runtime errors back into the planner with targeted instructions.
-- [ ] Add max repair attempts and explicit terminal statuses: `success`, `failed_planning`, `failed_execution`, `failed_verification`, `max_repairs_exceeded`.
+- [x] Add an `AgentRunState` model that tracks prompt, current pipeline, execution result, errors, repair attempts, and final status.
+- [x] Split current planner behavior into stages: `plan`, `run`, `verify`, `repair`, `finalize`.
+- [x] Add a verifier that checks pipeline shape, required outputs, non-empty factor scores, and final report quality.
+- [x] Add a repair loop that feeds verifier/runtime errors back into the planner with targeted instructions.
+- [x] Add max repair attempts and explicit terminal statuses: `success`, `failed_planning`, `failed_execution`, `failed_verification`, `max_repairs_exceeded`.
 
 Acceptance:
 
-- [ ] A deliberately broken pipeline can be repaired automatically at least once.
-- [ ] CLI command prints each stage and final status.
-- [ ] Tests cover success, execution failure, verification failure, and max-repair behavior.
+- [x] A deliberately broken pipeline can be repaired automatically at least once.
+- [x] CLI command prints each stage and final status.
+- [x] Tests cover success, execution failure, verification failure, and max-repair behavior.
 
 Demo command target:
 

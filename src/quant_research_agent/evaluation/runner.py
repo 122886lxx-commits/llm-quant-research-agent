@@ -6,11 +6,18 @@ import yaml
 
 from ..agent.workflow import AgentRunState, AgentWorkflowRunner, PipelineVerifier
 from ..engine.core.engine import PipelineEngine
+from ..permissions import WRITE_ARTIFACT, PermissionPolicy
 
 
 class EvaluationRunner:
-    def __init__(self, engine: Optional[PipelineEngine] = None, verifier: Optional[PipelineVerifier] = None) -> None:
-        self.engine = engine or PipelineEngine()
+    def __init__(
+        self,
+        engine: Optional[PipelineEngine] = None,
+        verifier: Optional[PipelineVerifier] = None,
+        permission_policy: Optional[PermissionPolicy] = None,
+    ) -> None:
+        self.permission_policy = permission_policy
+        self.engine = engine or PipelineEngine(permission_policy=permission_policy)
         self.verifier = verifier or PipelineVerifier()
 
     async def run_path(self, path: Path, output: Optional[Path] = None) -> Dict[str, Any]:
@@ -106,7 +113,11 @@ class EvaluationRunner:
                 return {"pipeline": pipeline, "messages": [], "model": "deterministic-eval"}
             return {"pipeline": repair_pipeline, "messages": [], "model": "deterministic-eval"}
 
-        state = await AgentWorkflowRunner(planner=planner, repairer=repairer).run(
+        state = await AgentWorkflowRunner(
+            planner=planner,
+            repairer=repairer,
+            permission_policy=self.permission_policy,
+        ).run(
             task.get("prompt", ""),
             max_repairs=int(task.get("max_repairs", 0)),
         )
@@ -211,6 +222,8 @@ class EvaluationRunner:
         return round(sum(1 for result in results if result.get(key)) / len(results), 6)
 
     def _write_outputs(self, summary: Dict[str, Any], output: Path) -> None:
+        if self.permission_policy is not None:
+            self.permission_policy.require(WRITE_ARTIFACT, "write evaluation result artifacts")
         output.parent.mkdir(parents=True, exist_ok=True)
         with open(output, "w", encoding="utf-8") as handle:
             json.dump(summary, handle, indent=2, ensure_ascii=False)

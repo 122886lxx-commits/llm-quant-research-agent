@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, Dict, List
 
+from ....permissions import NETWORK
 from ..base import BaseStep
 
 
@@ -19,6 +20,11 @@ class MarketBarsStep(BaseStep):
         fixture_symbols = [symbol for symbol in symbols if symbol not in live_symbols]
 
         if live_symbols:
+            if context is not None and getattr(context, "permission_policy", None) is not None:
+                context.permission_policy.require(
+                    NETWORK,
+                    "fetch live BaoStock market bars for {0}".format(", ".join(live_symbols)),
+                )
             grouped.update(self._fetch_live_bars(live_symbols, lookback_days))
         if fixture_symbols:
             grouped.update(self._load_fixture_bars(fixture_symbols, lookback_days))
@@ -117,4 +123,3 @@ class MarketBarsStep(BaseStep):
             if candidate.exists():
                 return candidate
         raise FileNotFoundError("Could not locate datasets/daily_bars.json")
-

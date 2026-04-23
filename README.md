@@ -60,7 +60,7 @@ python -m quant_research_agent plan "Use market bars to compute momentum, rank t
 Run the full agent workflow with verification and bounded self-repair:
 
 ```bash
-python -m quant_research_agent agent "Rank AAPL, MSFT, NVDA by 3-day momentum and explain the result" --max-repairs 1
+python -m quant_research_agent agent "Rank AAPL, MSFT, NVDA by 3-day momentum and explain the result" --max-repairs 1 --allow read,write_artifact
 ```
 
 Every `plan --execute` and `agent` run writes a redacted trace to `runs/<timestamp>/trace.json` and refreshes `runs/latest/trace.json`.
@@ -75,7 +75,7 @@ python -m quant_research_agent replay runs/latest/trace.json
 Run deterministic evaluations without an LLM:
 
 ```bash
-python -m quant_research_agent eval evals/tasks --output evals/results/latest.json
+python -m quant_research_agent eval evals/tasks --output evals/results/latest.json --allow read,write_artifact
 ```
 
 ## Market Data Behavior
@@ -98,6 +98,10 @@ The repository includes 20 deterministic eval tasks in `evals/tasks/deterministi
 ## Self-Repair
 
 The agent classifies failures as `planning_error`, `config_error`, `data_error`, `provider_error`, or `verification_error`. Repair prompts are specialized by error class, and each repair attempt records a pipeline diff with added/removed steps, changed configs, and dependency-edge changes. This makes failed runs inspectable instead of just retrying blindly.
+
+## Permissions
+
+CLI commands accept `--allow` with comma-separated permissions: `read`, `network`, `write_artifact`, and `destructive`. Local fixture reads are allowed by default. Live BaoStock data requires `network`, trace/eval artifact writing requires `write_artifact`, and `destructive` is blocked by default even if requested. Permission decisions are recorded in trace files.
 
 ## Why This Project Matters
 

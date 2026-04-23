@@ -1,16 +1,17 @@
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Union
 
+from ...permissions import PermissionPolicy
 from ..dsl.parser import PipelineParser
 from .registry import get_registry
 from .scheduler import PipelineScheduler
 
 
 class PipelineEngine:
-    def __init__(self):
+    def __init__(self, permission_policy: Optional[PermissionPolicy] = None):
         self.parser = PipelineParser()
         self.registry = get_registry()
-        self.scheduler = PipelineScheduler(self.registry)
+        self.scheduler = PipelineScheduler(self.registry, permission_policy=permission_policy)
 
     async def run_pipeline(self, source: Union[str, Path, Dict[str, Any]]) -> Dict[str, Any]:
         parsed_pipeline = self._load_pipeline(source)
@@ -20,4 +21,3 @@ class PipelineEngine:
         if isinstance(source, dict):
             return self.parser.parse_dict(source)
         return self.parser.parse_file(source)
-

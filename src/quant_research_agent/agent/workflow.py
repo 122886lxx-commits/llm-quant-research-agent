@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 from ..engine.core.engine import PipelineEngine
+from ..permissions import PermissionPolicy
 from .repair import build_repair_prompt, classify_error, diff_pipelines
 from .react_loop import ReactLoopAgent
 from .tools import _pipeline_validation_error
@@ -39,6 +40,7 @@ class AgentRunState:
     messages: List[Dict[str, Any]] = field(default_factory=list)
     model: Optional[str] = None
     repair_diffs: List[Dict[str, Any]] = field(default_factory=list)
+    permission_policy: Optional[PermissionPolicy] = None
 
     def record_stage(self, stage: str, status: str, details: Optional[Dict[str, Any]] = None) -> None:
         entry: Dict[str, Any] = {"stage": stage, "status": status}
@@ -54,6 +56,7 @@ class AgentRunState:
             "prompt": self.prompt,
             "status": self.status,
             "model": self.model,
+            "permission_decisions": self.permission_policy.to_trace() if self.permission_policy else [],
             "repair_attempts": self.repair_attempts,
             "pipeline": self.current_pipeline,
             "execution_result": self.execution_result,
@@ -143,14 +146,16 @@ class AgentWorkflowRunner:
         repairer: Optional[Repairer] = None,
         verifier: Optional[PipelineVerifier] = None,
         engine: Optional[PipelineEngine] = None,
+        permission_policy: Optional[PermissionPolicy] = None,
     ) -> None:
         self.planner = planner or self._run_react_planner
         self.repairer = repairer or self._run_react_repairer
         self.verifier = verifier or PipelineVerifier()
-        self.engine = engine or PipelineEngine()
+        self.permission_policy = permission_policy
+        self.engine = engine or PipelineEngine(permission_policy=permission_policy)
 
     async def run(self, prompt: str, max_repairs: int = 1) -> AgentRunState:
-        state = AgentRunState(prompt=prompt)
+        state = AgentRunState(prompt=prompt, permission_policy=self.permission_policy)
         planned = await self._plan(state)
         if not planned:
             return state
@@ -251,11 +256,11 @@ class AgentWorkflowRunner:
         return True
 
     async def _run_react_planner(self, prompt: str) -> Dict[str, Any]:
-        return await ReactLoopAgent().run(prompt)
+        return await ReactLoopAgent(permission_policy=self.permission_policy).run(prompt)
 
     async def _run_react_repairer(self, state: AgentRunState) -> Dict[str, Any]:
         instruction = self._repair_instruction(state)
-        return await ReactLoopAgent().run(instruction)
+        return await ReactLoopAgent(permission_policy=self.permission_policy).run(instruction)
 
     def _repair_instruction(self, state: AgentRunState) -> str:
         return build_repair_prompt(

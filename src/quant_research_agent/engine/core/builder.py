@@ -1,17 +1,18 @@
 from copy import deepcopy
 from typing import Any, Dict, List, Optional
 
+from ...permissions import PermissionPolicy
 from .context import ExecutionContext
 from .registry import get_registry
 
 
 class PipelineBuilder:
-    def __init__(self, registry: Optional[Any] = None):
+    def __init__(self, registry: Optional[Any] = None, permission_policy: Optional[PermissionPolicy] = None):
         self.registry = registry or get_registry()
         self.pipeline_id = "builder_pipeline"
         self.pipeline_name = "Untitled Pipeline"
         self._draft_steps: Dict[str, Dict[str, Any]] = {}
-        self._runtime = ExecutionContext(self.pipeline_id)
+        self._runtime = ExecutionContext(self.pipeline_id, permission_policy=permission_policy)
 
     def add_step(self, kind: str, config: Dict[str, Any], step_id: Optional[str] = None) -> str:
         resolved_id = step_id or self._allocate_step_id(kind)
@@ -75,4 +76,3 @@ class PipelineBuilder:
             candidate = "{0}_{1}".format(stem, sequence)
             sequence += 1
         return candidate
-

@@ -120,18 +120,18 @@ Why it matters:
 
 Tasks:
 
-- [ ] Add a tool permission model: `read`, `network`, `write_artifact`, `destructive`.
-- [ ] Require explicit approval for `network` and `write_artifact` in interactive mode.
-- [ ] Add a non-interactive policy flag: `--allow read,network`.
-- [ ] Prevent destructive actions by default.
-- [ ] Log all permission decisions into trace files.
-- [ ] Add secret redaction for env vars and trace payloads.
+- [x] Add a tool permission model: `read`, `network`, `write_artifact`, `destructive`.
+- [x] Require explicit approval for `network` and `write_artifact` in interactive mode.
+- [x] Add a non-interactive policy flag: `--allow read,network`.
+- [x] Prevent destructive actions by default.
+- [x] Log all permission decisions into trace files.
+- [x] Add secret redaction for env vars and trace payloads.
 
 Acceptance:
 
-- [ ] Running a live BaoStock query requires `network` permission.
-- [ ] Writing artifacts requires `write_artifact` permission.
-- [ ] Tests prove secrets are redacted from traces.
+- [x] Running a live BaoStock query requires `network` permission.
+- [x] Writing artifacts requires `write_artifact` permission.
+- [x] Tests prove secrets are redacted from traces.
 
 Demo command target:
 

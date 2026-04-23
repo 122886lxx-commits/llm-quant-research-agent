@@ -1,16 +1,18 @@
 from collections import deque
-from typing import Any, Deque, Dict, Iterable, List, Set
+from typing import Any, Deque, Dict, Iterable, List, Optional, Set
 
+from ...permissions import PermissionPolicy
 from ..dsl.models import Pipeline, Step
 from .context import ExecutionContext
 
 
 class PipelineScheduler:
-    def __init__(self, registry: Any) -> None:
+    def __init__(self, registry: Any, permission_policy: Optional[PermissionPolicy] = None) -> None:
         self.registry = registry
+        self.permission_policy = permission_policy
 
     async def execute(self, pipeline: Pipeline) -> Dict[str, Any]:
-        runtime = ExecutionContext(pipeline.pipeline_id or "unknown")
+        runtime = ExecutionContext(pipeline.pipeline_id or "unknown", permission_policy=self.permission_policy)
         execution = _ExecutionGraph.from_pipeline(pipeline)
 
         while execution.has_waiting_steps():
@@ -124,4 +126,3 @@ class _ExecutionGraph:
             for token in value.split("$")[1:]:
                 refs.add(token.split("[")[0].split()[0].strip(".,:;)"))
         return refs
-

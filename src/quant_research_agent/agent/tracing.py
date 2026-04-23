@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from ..engine.core.engine import PipelineEngine
+from ..permissions import WRITE_ARTIFACT, PermissionPolicy
 
 TRACE_VERSION = 1
 DEFAULT_RUNS_DIR = Path("runs")
@@ -25,6 +26,7 @@ def build_agent_trace(state: Any) -> Dict[str, Any]:
         "execution_result": state.execution_result,
         "verifier_result": state.verifier_result.to_dict() if state.verifier_result else None,
         "repairs": {"attempts": state.repair_attempts, "diffs": getattr(state, "repair_diffs", [])},
+        "permission_decisions": state.permission_policy.to_trace() if getattr(state, "permission_policy", None) else [],
         "stage_history": state.stage_history,
         "errors": state.errors,
         "final_status": state.status,
@@ -37,6 +39,7 @@ def build_plan_trace(
     execution_result: Optional[Dict[str, Any]],
     final_status: str,
     errors: Optional[Any] = None,
+    permission_decisions: Optional[Any] = None,
 ) -> Dict[str, Any]:
     return {
         "trace_version": TRACE_VERSION,
@@ -49,13 +52,22 @@ def build_plan_trace(
         "execution_result": execution_result,
         "verifier_result": None,
         "repairs": {"attempts": 0},
+        "permission_decisions": permission_decisions or [],
         "stage_history": _plan_stage_history(execution_result, final_status),
         "errors": errors or [],
         "final_status": final_status,
     }
 
-
-def write_trace(payload: Dict[str, Any], run_dir: Optional[Path] = None, runs_dir: Path = DEFAULT_RUNS_DIR) -> Path:
+def write_trace(
+    payload: Dict[str, Any],
+    run_dir: Optional[Path] = None,
+    runs_dir: Path = DEFAULT_RUNS_DIR,
+    permission_policy: Optional[PermissionPolicy] = None,
+) -> Path:
+    if permission_policy is not None:
+        permission_policy.require(WRITE_ARTIFACT, "write agent trace artifact")
+        payload = dict(payload)
+        payload["permission_decisions"] = permission_policy.to_trace()
     destination = run_dir or _new_run_dir(runs_dir)
     destination.mkdir(parents=True, exist_ok=True)
     trace_path = destination / "trace.json"

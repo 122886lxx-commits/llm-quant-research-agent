@@ -1,15 +1,18 @@
 import json
 import re
-from typing import Any, Dict, Iterable, Tuple
+from typing import Any, Dict, Iterable, Optional, Tuple
+
+from ...permissions import PermissionPolicy
 
 
 REFERENCE_PATTERN = re.compile(r"\$[A-Za-z_][A-Za-z0-9_]*(?:\[['\"][^'\"]+['\"]\]|\[\d+\])*")
 
 
 class ExecutionContext:
-    def __init__(self, pipeline_id: str):
+    def __init__(self, pipeline_id: str, permission_policy: Optional[PermissionPolicy] = None):
         self.pipeline_id = pipeline_id
         self.step_outputs: Dict[str, Any] = {}
+        self.permission_policy = permission_policy
 
     def set_output(self, step_id: str, output: Any) -> None:
         self.step_outputs[step_id] = output
@@ -66,4 +69,3 @@ class ExecutionContext:
                 yield field_name
             else:
                 yield int(match.group(2))
-

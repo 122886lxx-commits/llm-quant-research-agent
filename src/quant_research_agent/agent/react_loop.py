@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from openai import AsyncOpenAI
 
 from ..engine.core.builder import PipelineBuilder
+from ..permissions import PermissionPolicy
 from .tools import bind_builder, execute_tool, get_tool_specs
 
 SYSTEM_PROMPT = """You operate a draft builder for quant research workflows.
@@ -42,8 +43,9 @@ MAX_CONSECUTIVE_TOOL_FAILURES = 3
 
 
 class ReactLoopAgent:
-    def __init__(self, builder: Optional[PipelineBuilder] = None):
-        self.builder = builder or PipelineBuilder()
+    def __init__(self, builder: Optional[PipelineBuilder] = None, permission_policy: Optional[PermissionPolicy] = None):
+        self.permission_policy = permission_policy
+        self.builder = builder or PipelineBuilder(permission_policy=permission_policy)
         bind_builder(self.builder)
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:

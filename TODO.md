@@ -148,17 +148,17 @@ Why it matters:
 
 Tasks:
 
-- [ ] Add output directories per run: `runs/<timestamp>/`.
-- [ ] Save `generated_pipeline.yaml`, `run_result.json`, `research_report.md`, and `trace.json`.
-- [ ] Add markdown report rendering from rank/momentum/chat outputs.
-- [ ] Add CLI options: `--output-dir`, `--save-pipeline`, `--save-report`.
-- [ ] Add a deterministic report example that does not require LLM credentials.
+- [x] Add output directories per run: `runs/<timestamp>/`.
+- [x] Save `generated_pipeline.yaml`, `run_result.json`, `research_report.md`, and `trace.json`.
+- [x] Add markdown report rendering from rank/momentum/chat outputs.
+- [x] Add CLI options: `--output-dir`, `--save-pipeline`, `--save-report`.
+- [x] Add a deterministic report example that does not require LLM credentials.
 
 Acceptance:
 
-- [ ] A run produces all expected artifacts.
-- [ ] Report includes prompt, pipeline summary, ranked table, and final explanation.
-- [ ] Saved pipeline can be re-run with `quant-agent run`.
+- [x] A run produces all expected artifacts.
+- [x] Report includes prompt, pipeline summary, ranked table, and final explanation.
+- [x] Saved pipeline can be re-run with `quant-agent run`.
 
 Demo command target:
 

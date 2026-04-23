@@ -63,21 +63,26 @@ def write_trace(
     run_dir: Optional[Path] = None,
     runs_dir: Path = DEFAULT_RUNS_DIR,
     permission_policy: Optional[PermissionPolicy] = None,
+    update_latest: bool = True,
 ) -> Path:
     if permission_policy is not None:
         permission_policy.require(WRITE_ARTIFACT, "write agent trace artifact")
         payload = dict(payload)
         payload["permission_decisions"] = permission_policy.to_trace()
-    destination = run_dir or _new_run_dir(runs_dir)
+    destination = run_dir or create_run_dir(runs_dir)
     destination.mkdir(parents=True, exist_ok=True)
     trace_path = destination / "trace.json"
     with open(trace_path, "w", encoding="utf-8") as handle:
         json.dump(sanitize_for_trace(payload), handle, indent=2, ensure_ascii=False)
         handle.write("\n")
 
-    if run_dir is None:
+    if update_latest:
         _update_latest(trace_path, runs_dir)
     return trace_path
+
+
+def create_run_dir(runs_dir: Path = DEFAULT_RUNS_DIR) -> Path:
+    return _new_run_dir(runs_dir)
 
 
 def load_trace(path: Path) -> Dict[str, Any]:

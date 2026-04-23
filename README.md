@@ -38,6 +38,13 @@ Run a deterministic YAML example without an LLM key:
 python -m quant_research_agent run examples/momentum_report_pipeline.yaml
 ```
 
+Generate deterministic artifacts from the same YAML example:
+
+```bash
+python -m quant_research_agent run examples/momentum_report_pipeline.yaml --output-dir runs/demo --allow read,write_artifact
+python -m quant_research_agent run runs/demo/generated_pipeline.yaml
+```
+
 Run the LLM-backed YAML example:
 
 ```bash
@@ -64,6 +71,8 @@ python -m quant_research_agent agent "Rank AAPL, MSFT, NVDA by 3-day momentum an
 ```
 
 Every `plan --execute` and `agent` run writes a redacted trace to `runs/<timestamp>/trace.json` and refreshes `runs/latest/trace.json`.
+
+Agent runs also save `generated_pipeline.yaml`, `run_result.json`, and `research_report.md` in the same output directory when artifact writing is allowed.
 
 Summarize or replay a saved trace:
 
@@ -102,6 +111,10 @@ The agent classifies failures as `planning_error`, `config_error`, `data_error`,
 ## Permissions
 
 CLI commands accept `--allow` with comma-separated permissions: `read`, `network`, `write_artifact`, and `destructive`. Local fixture reads are allowed by default. Live BaoStock data requires `network`, trace/eval artifact writing requires `write_artifact`, and `destructive` is blocked by default even if requested. Permission decisions are recorded in trace files.
+
+## Artifacts
+
+Artifact-enabled runs produce reusable files: the generated pipeline can be re-run with `quant-agent run`, `run_result.json` captures raw execution outputs, and `research_report.md` renders the prompt, pipeline summary, ranked table, factor scores, and final explanation.
 
 ## Why This Project Matters
 

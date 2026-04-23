@@ -66,17 +66,17 @@ Why it matters:
 
 Tasks:
 
-- [ ] Create `evals/tasks/*.yaml` with natural-language prompts and expected pipeline/output assertions.
-- [ ] Support evaluation dimensions: planning validity, execution success, output assertions, repair success, and tool-call count.
-- [ ] Add an eval runner: `python -m quant_research_agent eval evals/tasks`.
-- [ ] Produce `evals/results/latest.json` and a markdown summary table.
+- [x] Create `evals/tasks/*.yaml` with natural-language prompts and expected pipeline/output assertions.
+- [x] Support evaluation dimensions: planning validity, execution success, output assertions, repair success, and tool-call count.
+- [x] Add an eval runner: `python -m quant_research_agent eval evals/tasks`.
+- [x] Produce `evals/results/latest.json` and a markdown summary table.
 - [ ] Add baseline tasks for momentum ranking, volatility ranking, report generation, bad reference repair, missing step repair, and static prompt rejection.
 
 Acceptance:
 
-- [ ] At least 20 eval tasks exist.
-- [ ] Eval summary reports planning success rate, execution success rate, verification success rate, and repair success rate.
-- [ ] CI can run deterministic evals without an LLM by replaying fixed pipelines.
+- [x] At least 20 eval tasks exist.
+- [x] Eval summary reports planning success rate, execution success rate, verification success rate, and repair success rate.
+- [x] CI can run deterministic evals without an LLM by replaying fixed pipelines.
 
 Demo command target:
 

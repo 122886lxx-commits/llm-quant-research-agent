@@ -1,0 +1,323 @@
+momentum_pipeline: &momentum_pipeline
+  pipeline_id: eval_momentum
+  name: Eval Momentum
+  steps:
+    - id: trigger
+      kind: trigger.manual
+      config:
+        universe: [AAPL, MSFT, NVDA]
+      next: [bars]
+    - id: bars
+      kind: data.market_bars
+      config:
+        symbols: "$trigger['universe']"
+        lookback_days: 5
+      next: [momentum]
+    - id: momentum
+      kind: factor.momentum
+      config:
+        bars: "$bars"
+        window: 3
+      next: [rank]
+    - id: rank
+      kind: factor.rank
+      config:
+        values: "$momentum['scores']"
+        descending: true
+      next: [report]
+    - id: report
+      kind: output.report
+      config:
+        sections:
+          - "Top ranked symbols: $rank['top']"
+          - "Momentum scores: $momentum['scores']"
+      next: []
+
+ascending_pipeline: &ascending_pipeline
+  pipeline_id: eval_ascending
+  name: Eval Ascending Rank
+  steps:
+    - id: trigger
+      kind: trigger.manual
+      config:
+        universe: [AAPL, MSFT, NVDA]
+      next: [bars]
+    - id: bars
+      kind: data.market_bars
+      config:
+        symbols: "$trigger['universe']"
+        lookback_days: 5
+      next: [momentum]
+    - id: momentum
+      kind: factor.momentum
+      config:
+        bars: "$bars"
+        window: 3
+      next: [rank]
+    - id: rank
+      kind: factor.rank
+      config:
+        values: "$momentum['scores']"
+        descending: false
+      next: [report]
+    - id: report
+      kind: output.report
+      config:
+        sections:
+          - "Ascending ranked symbols: $rank['top']"
+      next: []
+
+broken_reference_pipeline: &broken_reference_pipeline
+  pipeline_id: eval_broken_reference
+  name: Eval Broken Reference
+  steps:
+    - id: momentum
+      kind: factor.momentum
+      config:
+        bars: "$missing"
+        window: 3
+      next: [report]
+    - id: report
+      kind: output.report
+      config:
+        sections:
+          - "This should be repaired."
+      next: []
+
+empty_scores_pipeline: &empty_scores_pipeline
+  pipeline_id: eval_empty_scores
+  name: Eval Empty Scores
+  steps:
+    - id: momentum
+      kind: factor.momentum
+      config:
+        bars: {}
+        window: 3
+      next: [report]
+    - id: report
+      kind: output.report
+      config:
+        sections:
+          - "Momentum report exists but scores are empty."
+      next: []
+
+unsupported_symbol_pipeline: &unsupported_symbol_pipeline
+  pipeline_id: eval_unsupported_symbol
+  name: Eval Unsupported Symbol
+  steps:
+    - id: trigger
+      kind: trigger.manual
+      config:
+        universe: [TSLA]
+      next: [bars]
+    - id: bars
+      kind: data.market_bars
+      config:
+        symbols: "$trigger['universe']"
+        lookback_days: 5
+      next: []
+
+disconnected_pipeline: &disconnected_pipeline
+  pipeline_id: eval_disconnected
+  name: Eval Disconnected
+  steps:
+    - id: trigger
+      kind: trigger.manual
+      config:
+        universe: [AAPL]
+      next: []
+    - id: report
+      kind: output.report
+      config:
+        sections:
+          - "Static report that is not connected to trigger."
+      next: []
+
+tasks:
+  - id: momentum_top_order
+    prompt: Rank AAPL, MSFT, and NVDA by 3-day momentum.
+    pipeline: *momentum_pipeline
+    expect:
+      execution_success: true
+      verification_success: true
+      outputs:
+        - path: outputs.rank.top
+          equals: [NVDA, AAPL, MSFT]
+
+  - id: momentum_nvda_score
+    prompt: Verify NVDA momentum score.
+    pipeline: *momentum_pipeline
+    expect:
+      execution_success: true
+      outputs:
+        - path: outputs.momentum.scores.NVDA
+          equals: 0.067308
+
+  - id: momentum_aapl_score
+    prompt: Verify AAPL momentum score.
+    pipeline: *momentum_pipeline
+    expect:
+      execution_success: true
+      outputs:
+        - path: outputs.momentum.scores.AAPL
+          equals: 0.047619
+
+  - id: momentum_msft_score
+    prompt: Verify MSFT momentum score.
+    pipeline: *momentum_pipeline
+    expect:
+      execution_success: true
+      outputs:
+        - path: outputs.momentum.scores.MSFT
+          equals: 0.034826
+
+  - id: momentum_coverage
+    prompt: Verify all fixture symbols have momentum coverage.
+    pipeline: *momentum_pipeline
+    expect:
+      execution_success: true
+      outputs:
+        - path: outputs.momentum.coverage
+          equals: 1.0
+
+  - id: rank_first_symbol
+    prompt: Verify top-ranked symbol.
+    pipeline: *momentum_pipeline
+    expect:
+      execution_success: true
+      outputs:
+        - path: outputs.rank.ordered.0.symbol
+          equals: NVDA
+
+  - id: rank_first_rank_number
+    prompt: Verify top-ranked row has rank 1.
+    pipeline: *momentum_pipeline
+    expect:
+      execution_success: true
+      outputs:
+        - path: outputs.rank.ordered.0.rank
+          equals: 1
+
+  - id: report_mentions_nvda
+    prompt: Verify final report mentions NVDA.
+    pipeline: *momentum_pipeline
+    expect:
+      execution_success: true
+      outputs:
+        - path: outputs.report.sections.0
+          contains: NVDA
+
+  - id: report_has_two_sections
+    prompt: Verify report contains summary and score sections.
+    pipeline: *momentum_pipeline
+    expect:
+      execution_success: true
+      outputs:
+        - path: outputs.report.sections
+          length: 2
+
+  - id: pipeline_verifies
+    prompt: Verify deterministic pipeline passes verifier.
+    pipeline: *momentum_pipeline
+    expect:
+      execution_success: true
+      verification_success: true
+
+  - id: ascending_rank_order
+    prompt: Rank fixture symbols from weakest to strongest momentum.
+    pipeline: *ascending_pipeline
+    expect:
+      execution_success: true
+      outputs:
+        - path: outputs.rank.top
+          equals: [MSFT, AAPL, NVDA]
+
+  - id: trigger_universe_output
+    prompt: Verify trigger emits requested universe.
+    pipeline: *momentum_pipeline
+    expect:
+      execution_success: true
+      outputs:
+        - path: outputs.trigger.universe
+          equals: [AAPL, MSFT, NVDA]
+
+  - id: aapl_bar_count
+    prompt: Verify AAPL fixture bar count.
+    pipeline: *momentum_pipeline
+    expect:
+      execution_success: true
+      outputs:
+        - path: outputs.bars.AAPL
+          length: 5
+
+  - id: nvda_last_close
+    prompt: Verify NVDA latest fixture close.
+    pipeline: *momentum_pipeline
+    expect:
+      execution_success: true
+      outputs:
+        - path: outputs.bars.NVDA.4.close
+          equals: 333.0
+
+  - id: workflow_success
+    mode: workflow
+    prompt: Run the workflow state machine on a valid pipeline.
+    pipeline: *momentum_pipeline
+    max_repairs: 0
+    expect:
+      final_status: success
+      verification_success: true
+      outputs:
+        - path: outputs.rank.top
+          equals: [NVDA, AAPL, MSFT]
+
+  - id: workflow_repairs_missing_reference
+    mode: workflow
+    prompt: Repair a missing reference and complete the momentum report.
+    pipeline: *broken_reference_pipeline
+    repair_pipeline: *momentum_pipeline
+    max_repairs: 1
+    expect:
+      final_status: success
+      repair_attempts: 1
+      outputs:
+        - path: outputs.rank.top
+          equals: [NVDA, AAPL, MSFT]
+
+  - id: workflow_detects_empty_scores
+    mode: workflow
+    prompt: Reject a pipeline that produces empty factor scores.
+    pipeline: *empty_scores_pipeline
+    max_repairs: 0
+    expect:
+      final_status: failed_verification
+      verification_success: false
+
+  - id: workflow_max_repairs_exceeded
+    mode: workflow
+    prompt: Stop after a repair still leaves the same missing reference.
+    pipeline: *broken_reference_pipeline
+    repair_pipeline: *broken_reference_pipeline
+    max_repairs: 1
+    expect:
+      final_status: max_repairs_exceeded
+      execution_success: false
+      repair_attempts: 1
+
+  - id: unsupported_symbol_fails_execution
+    prompt: Unsupported demo symbols should fail clearly.
+    pipeline: *unsupported_symbol_pipeline
+    expect:
+      planning_validity: true
+      execution_success: false
+      final_status: failed_execution
+
+  - id: disconnected_pipeline_fails_verification
+    mode: workflow
+    prompt: A disconnected report should be rejected by verification.
+    pipeline: *disconnected_pipeline
+    max_repairs: 0
+    expect:
+      final_status: failed_verification
+      execution_success: true
+      verification_success: false

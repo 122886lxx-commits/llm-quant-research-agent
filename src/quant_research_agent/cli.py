@@ -15,6 +15,7 @@ from .agent.tracing import (
 )
 from .agent.workflow import AgentWorkflowRunner
 from .engine.core.engine import PipelineEngine
+from .evaluation import EvaluationRunner
 
 
 def main() -> None:
@@ -37,6 +38,10 @@ def main() -> None:
 
     replay_parser = subparsers.add_parser("replay", help="Replay the pipeline stored in a trace file.")
     replay_parser.add_argument("trace_json", type=Path)
+
+    eval_parser = subparsers.add_parser("eval", help="Run deterministic evaluation tasks.")
+    eval_parser.add_argument("tasks", type=Path)
+    eval_parser.add_argument("--output", type=Path, default=Path("evals/results/latest.json"))
 
     args = parser.parse_args()
     asyncio.run(_dispatch(args))
@@ -102,6 +107,14 @@ async def _dispatch(args: Any) -> None:
     if args.command == "replay":
         result = await replay_trace(args.trace_json)
         print(json.dumps(result, indent=2, ensure_ascii=False))
+        return
+
+    if args.command == "eval":
+        summary = await EvaluationRunner().run_path(args.tasks, output=args.output)
+        compact_summary = {key: value for key, value in summary.items() if key != "tasks"}
+        print(json.dumps(compact_summary, indent=2, ensure_ascii=False))
+        print("Evaluation results: {0}".format(args.output))
+        print("Evaluation markdown: {0}".format(args.output.with_suffix(".md")))
         return
 
     raise ValueError("Unsupported command: {0}".format(args.command))

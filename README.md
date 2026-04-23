@@ -72,6 +72,12 @@ python -m quant_research_agent trace runs/latest/trace.json
 python -m quant_research_agent replay runs/latest/trace.json
 ```
 
+Run deterministic evaluations without an LLM:
+
+```bash
+python -m quant_research_agent eval evals/tasks --output evals/results/latest.json
+```
+
 ## Market Data Behavior
 
 - Exchange-prefixed symbols such as `sh.600000` or `sz.000001` are fetched through BaoStock.
@@ -81,8 +87,13 @@ python -m quant_research_agent replay runs/latest/trace.json
 
 - `quant_research_agent.engine`: YAML parser, dependency scheduler, execution context, registry, runtime nodes
 - `quant_research_agent.agent`: catalog metadata, generic planner tools, handwritten ReAct loop, workflow verifier, repair state machine, trace/replay utilities
+- `quant_research_agent.evaluation`: deterministic eval runner, output assertions, JSON and Markdown summaries
 - `examples`: executable pipeline specs
 - `tests`: regression tests for runtime execution, reference interpolation, tool validation, model fallback, workflow repair, and trace replay
+
+## Evaluation
+
+The repository includes 20 deterministic eval tasks in `evals/tasks/deterministic_core.yaml`. They cover pipeline validity, execution success, output assertions, verifier failures, repair success, and max-repair behavior. The eval runner writes machine-readable JSON plus a Markdown summary table.
 
 ## Why This Project Matters
 

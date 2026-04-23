@@ -24,7 +24,7 @@ def build_agent_trace(state: Any) -> Dict[str, Any]:
         "pipeline": state.current_pipeline,
         "execution_result": state.execution_result,
         "verifier_result": state.verifier_result.to_dict() if state.verifier_result else None,
-        "repairs": {"attempts": state.repair_attempts},
+        "repairs": {"attempts": state.repair_attempts, "diffs": getattr(state, "repair_diffs", [])},
         "stage_history": state.stage_history,
         "errors": state.errors,
         "final_status": state.status,

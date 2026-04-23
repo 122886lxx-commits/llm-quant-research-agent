@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 from ..engine.core.engine import PipelineEngine
+from .repair import build_repair_prompt, classify_error, diff_pipelines
 from .react_loop import ReactLoopAgent
 from .tools import _pipeline_validation_error
 
@@ -37,6 +38,7 @@ class AgentRunState:
     stage_history: List[Dict[str, Any]] = field(default_factory=list)
     messages: List[Dict[str, Any]] = field(default_factory=list)
     model: Optional[str] = None
+    repair_diffs: List[Dict[str, Any]] = field(default_factory=list)
 
     def record_stage(self, stage: str, status: str, details: Optional[Dict[str, Any]] = None) -> None:
         entry: Dict[str, Any] = {"stage": stage, "status": status}
@@ -45,7 +47,7 @@ class AgentRunState:
         self.stage_history.append(entry)
 
     def add_error(self, stage: str, message: str) -> None:
-        self.errors.append({"stage": stage, "message": message})
+        self.errors.append({"stage": stage, "class": classify_error(stage, message), "message": message})
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -57,6 +59,7 @@ class AgentRunState:
             "execution_result": self.execution_result,
             "verifier_result": self.verifier_result.to_dict() if self.verifier_result else None,
             "errors": list(self.errors),
+            "repair_diffs": list(self.repair_diffs),
             "stage_history": list(self.stage_history),
             "messages": list(self.messages),
         }
@@ -221,12 +224,19 @@ class AgentWorkflowRunner:
 
         state.repair_attempts += 1
         state.record_stage("repair", "started", {"attempt": state.repair_attempts})
+        previous_pipeline = state.current_pipeline
         try:
             result = await self.repairer(state)
             pipeline = result.get("pipeline") if isinstance(result, dict) else None
             if not isinstance(pipeline, dict):
                 raise ValueError("Repairer did not return a pipeline dictionary")
             state.current_pipeline = pipeline
+            state.repair_diffs.append(
+                {
+                    "attempt": state.repair_attempts,
+                    "diff": diff_pipelines(previous_pipeline, pipeline),
+                }
+            )
             state.execution_result = None
             state.verifier_result = None
             state.messages.extend(result.get("messages", []))
@@ -248,18 +258,9 @@ class AgentWorkflowRunner:
         return await ReactLoopAgent().run(instruction)
 
     def _repair_instruction(self, state: AgentRunState) -> str:
-        recent_errors = "\n".join("- {0}: {1}".format(item["stage"], item["message"]) for item in state.errors[-5:])
-        verifier_errors = ""
-        if state.verifier_result and state.verifier_result.errors:
-            verifier_errors = "\nVerifier errors:\n" + "\n".join("- {0}".format(error) for error in state.verifier_result.errors)
-        return (
-            "Repair the quant research pipeline for this user request:\n{prompt}\n\n"
-            "Current pipeline:\n{pipeline}\n\n"
-            "Recent errors:\n{errors}{verifier_errors}\n\n"
-            "Return a coherent executable pipeline through tool calls. Preserve the original user intent."
-        ).format(
+        return build_repair_prompt(
             prompt=state.prompt,
             pipeline=state.current_pipeline,
-            errors=recent_errors or "- none",
-            verifier_errors=verifier_errors,
+            errors=state.errors,
+            verifier_errors=state.verifier_result.errors if state.verifier_result else None,
         )

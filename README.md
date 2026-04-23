@@ -95,6 +95,10 @@ python -m quant_research_agent eval evals/tasks --output evals/results/latest.js
 
 The repository includes 20 deterministic eval tasks in `evals/tasks/deterministic_core.yaml`. They cover pipeline validity, execution success, output assertions, verifier failures, repair success, and max-repair behavior. The eval runner writes machine-readable JSON plus a Markdown summary table.
 
+## Self-Repair
+
+The agent classifies failures as `planning_error`, `config_error`, `data_error`, `provider_error`, or `verification_error`. Repair prompts are specialized by error class, and each repair attempt records a pipeline diff with added/removed steps, changed configs, and dependency-edge changes. This makes failed runs inspectable instead of just retrying blindly.
+
 ## Why This Project Matters
 
 This is intentionally not a trading bot. It is a research workflow prototype: the LLM plans a reproducible pipeline, the runtime executes that pipeline deterministically, and the final explanation is generated from actual upstream outputs.

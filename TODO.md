@@ -93,17 +93,17 @@ Why it matters:
 
 Tasks:
 
-- [ ] Add synthetic failure cases: missing reference, wrong field name, disconnected step, empty scores, unsupported symbol, missing API key, model not found.
-- [ ] Classify errors into `planning_error`, `config_error`, `data_error`, `provider_error`, and `verification_error`.
-- [ ] Add repair prompts specialized by error class.
-- [ ] Track repair diffs between pipeline versions.
-- [ ] Add tests for at least three repair classes.
+- [x] Add synthetic failure cases: missing reference, wrong field name, disconnected step, empty scores, unsupported symbol, missing API key, model not found.
+- [x] Classify errors into `planning_error`, `config_error`, `data_error`, `provider_error`, and `verification_error`.
+- [x] Add repair prompts specialized by error class.
+- [x] Track repair diffs between pipeline versions.
+- [x] Add tests for at least three repair classes.
 
 Acceptance:
 
-- [ ] Agent can repair a missing dependency edge.
-- [ ] Agent can repair an unresolved reference.
-- [ ] Agent can recover from a provider model mismatch by using configured defaults.
+- [x] Agent can repair a missing dependency edge.
+- [x] Agent can repair an unresolved reference.
+- [x] Agent can recover from a provider model mismatch by using configured defaults.
 
 Demo command target:
 

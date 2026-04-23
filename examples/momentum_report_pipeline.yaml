@@ -1,0 +1,34 @@
+pipeline:
+  pipeline_id: momentum_report_demo
+  name: Momentum Report Demo
+  steps:
+    - id: trigger
+      kind: trigger.manual
+      config:
+        universe: ["AAPL", "MSFT", "NVDA"]
+      next: [bars]
+    - id: bars
+      kind: data.market_bars
+      config:
+        symbols: "$trigger['universe']"
+        lookback_days: 5
+      next: [momentum]
+    - id: momentum
+      kind: factor.momentum
+      config:
+        bars: "$bars"
+        window: 3
+      next: [rank]
+    - id: rank
+      kind: factor.rank
+      config:
+        values: "$momentum['scores']"
+        descending: true
+      next: [report]
+    - id: report
+      kind: output.report
+      config:
+        sections:
+          - "Top ranked symbols: $rank['top']"
+          - "Momentum scores: $momentum['scores']"
+

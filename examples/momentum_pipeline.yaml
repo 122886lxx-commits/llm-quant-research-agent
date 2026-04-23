@@ -1,0 +1,32 @@
+pipeline:
+  pipeline_id: momentum_demo
+  name: Momentum Demo
+  steps:
+    - id: trigger
+      kind: trigger.manual
+      config:
+        universe: ["AAPL", "MSFT", "NVDA"]
+      next: [bars]
+    - id: bars
+      kind: data.market_bars
+      config:
+        symbols: "$trigger['universe']"
+        lookback_days: 5
+      next: [momentum]
+    - id: momentum
+      kind: factor.momentum
+      config:
+        bars: "$bars"
+        window: 3
+      next: [rank]
+    - id: rank
+      kind: factor.rank
+      config:
+        values: "$momentum['scores']"
+        descending: true
+      next: [chat]
+    - id: chat
+      kind: research_chat
+      config:
+        prompt: "Explain this momentum ranking: $rank['ordered']"
+
